@@ -19,11 +19,13 @@ void HandlePacket(sf::IpAddress &l_ip, const PortNumber &l_port, const PacketID 
             packet << msg;
             l_server->Broadcast(packet, cid);
         }
-    } else if ((PacketType)l_pid == PacketType::Connect) {
-        ClientID id = l_server->AddClient(l_ip, l_port);
-        sf::Packet packet;
-        StampPacket(PacketType::Connect, packet);
-        l_server->Send(id, packet);
+    } else {
+        if ((PacketType)l_pid == PacketType::Connect) {
+            ClientID id = l_server->AddClient(l_ip, l_port);
+            sf::Packet packet;
+            StampPacket(PacketType::Connect, packet);
+            l_server->Send(id, packet);
+        }
     }
 }
 

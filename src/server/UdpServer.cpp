@@ -189,16 +189,18 @@ void UdpServer::Broadcast(sf::Packet &l_packet, const ClientID &l_ignore) {
     }
 }
 
-bool UdpServer::AddClient(const sf::IpAddress &l_ip, const PortNumber &l_port) {
+ClientID UdpServer::AddClient(const sf::IpAddress &l_ip, const PortNumber &l_port) {
     sf::Lock lock(m_mutex);
     for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
-        if (itr->second.m_clientIP == l_ip && itr->second.m_clientPORT == l_port) return false;
+        if (itr->second.m_clientIP == l_ip && itr->second.m_clientPORT == l_port) {
+            return (ClientID)Network::NullID;
+        }
     }
     ClientID cid = m_lastID;
     ClientInfo info(l_ip, l_port, m_serverTime);
-    if (!m_clients.emplace(cid, info).second) return false;
+    m_clients.emplace(cid, info);
     ++m_lastID;
-    return true;
+    return (ClientID)Network::NullID;
 }
 
 ClientID UdpServer::GetClientID(const sf::IpAddress &l_ip, const PortNumber &l_port) {

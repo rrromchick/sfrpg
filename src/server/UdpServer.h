@@ -70,7 +70,7 @@ public:
     bool Send(const ClientID &l_client, sf::Packet &l_packet);
     void Broadcast(sf::Packet &l_packet, const ClientID &l_ignore = (ClientID)Network::NullID);
 
-    bool AddClient(const sf::IpAddress &l_ip, const PortNumber &l_port);
+    ClientID AddClient(const sf::IpAddress &l_ip, const PortNumber &l_port);
     bool HasClient(const sf::IpAddress &l_ip, const PortNumber &l_port);
     bool HasClient(const ClientID &l_client);
     ClientID GetClientID(const sf::IpAddress &l_ip, const PortNumber &l_port);
