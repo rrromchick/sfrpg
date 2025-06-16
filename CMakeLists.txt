@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.28)
 project(SFRPG LANGUAGES CXX)
 
+enable_language(CXX)
+
+include (GNUInstallDirs)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+
+find_package(X11 REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(SFML
@@ -13,6 +19,23 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(main src/main.cpp)
+add_library(common STATIC src/common/common.h)
 
-target_link_libraries(main sfml-graphics)
+add_executable(client src/client/main.cpp)
+
+add_executable(server src/server/main.cpp)
+
+target_link_libraries(common sfml-graphics)
+target_link_libraries(common sfml-window)
+target_link_libraries(common sfml-system)
+target_link_libraries(common sfml-audio)
+target_link_libraries(common sfml-network)
+
+target_link_libraries(client common)
+target_link_libraries(server common)
+
+target_include_directories(client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/common)
+target_include_directories(server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/common)
+
+target_compile_features(client PRIVATE cxx_std_17)
+target_compile_features(server PRIVATE cxx_std_17)
