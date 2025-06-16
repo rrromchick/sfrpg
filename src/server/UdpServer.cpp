@@ -200,7 +200,7 @@ ClientID UdpServer::AddClient(const sf::IpAddress &l_ip, const PortNumber &l_por
     ClientInfo info(l_ip, l_port, m_serverTime);
     m_clients.emplace(cid, info);
     ++m_lastID;
-    return (ClientID)Network::NullID;
+    return cid;
 }
 
 ClientID UdpServer::GetClientID(const sf::IpAddress &l_ip, const PortNumber &l_port) {

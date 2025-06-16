@@ -23,13 +23,12 @@ bool UdpClient::Connect() {
         sf::Socket::Status status = m_socket.receive(packet, recvIP, recvPORT);
         if (status != sf::Socket::Done) continue;
         if (recvIP != m_serverIp) continue;
-        std::cout << "hello" << std::endl;
+
         PacketID id;
         if (!(packet >> id)) continue;
         PacketType pType = (PacketType)id;
-        std::cout << (unsigned int)pType << " " << (unsigned int)PacketType::Connect << std::endl;
         if (pType != PacketType::Connect) break;
-        std::cout << "hello" << std::endl;
+
         m_packetHandler(id, packet, this);
         m_connected = true;
         m_socket.setBlocking(true);
