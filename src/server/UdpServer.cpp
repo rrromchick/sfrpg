@@ -189,7 +189,7 @@ void UdpServer::Broadcast(sf::Packet &l_packet, const ClientID &l_ignore) {
     }
 }
 
-bool UdpServer::AddClient(sf::IpAddress &l_ip, const PortNumber &l_port) {
+bool UdpServer::AddClient(const sf::IpAddress &l_ip, const PortNumber &l_port) {
     sf::Lock lock(m_mutex);
     for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
         if (itr->second.m_clientIP == l_ip && itr->second.m_clientPORT == l_port) return false;
@@ -201,7 +201,7 @@ bool UdpServer::AddClient(sf::IpAddress &l_ip, const PortNumber &l_port) {
     return true;
 }
 
-ClientID UdpServer::GetClientID(sf::IpAddress &l_ip, const PortNumber &l_port) {
+ClientID UdpServer::GetClientID(const sf::IpAddress &l_ip, const PortNumber &l_port) {
     sf::Lock lock(m_mutex);
     for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
         if (itr->second.m_clientIP == l_ip && itr->second.m_clientPORT == l_port) {
@@ -211,7 +211,7 @@ ClientID UdpServer::GetClientID(sf::IpAddress &l_ip, const PortNumber &l_port) {
     return (ClientID)Network::NullID;
 }
 
-bool UdpServer::HasClient(sf::IpAddress &l_ip, const PortNumber &l_port) {
+bool UdpServer::HasClient(const sf::IpAddress &l_ip, const PortNumber &l_port) {
     return (GetClientID(l_ip, l_port) >= 0);
 }
 
@@ -219,7 +219,7 @@ bool UdpServer::HasClient(const ClientID &l_client) {
     return (m_clients.find(l_client) != m_clients.end());
 }
 
-bool UdpServer::RemoveClient(sf::IpAddress &l_ip, const PortNumber &l_port) {
+bool UdpServer::RemoveClient(const sf::IpAddress &l_ip, const PortNumber &l_port) {
     sf::Lock lock(m_mutex);
     for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
         if (itr->second.m_clientIP == l_ip && itr->second.m_clientPORT == l_port) {

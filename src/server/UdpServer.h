@@ -11,7 +11,7 @@
 #define HEARTBEAT_RETRIES 5
 
 struct ClientInfo {
-    ClientInfo(sf::IpAddress &l_ip, const PortNumber &l_port, const sf::Time &l_time)
+    ClientInfo(const sf::IpAddress &l_ip, const PortNumber &l_port, const sf::Time &l_time)
         : m_clientIP(l_ip), m_clientPORT(l_port), m_lastHeartbeat(l_time),
         m_heartbeatWaiting(false), m_heartbeatRetry(0), m_ping(0)
     {}
@@ -70,11 +70,11 @@ public:
     bool Send(const ClientID &l_client, sf::Packet &l_packet);
     void Broadcast(sf::Packet &l_packet, const ClientID &l_ignore = (ClientID)Network::NullID);
 
-    bool AddClient(sf::IpAddress &l_ip, const PortNumber &l_port);
-    bool HasClient(sf::IpAddress &l_ip, const PortNumber &l_port);
+    bool AddClient(const sf::IpAddress &l_ip, const PortNumber &l_port);
+    bool HasClient(const sf::IpAddress &l_ip, const PortNumber &l_port);
     bool HasClient(const ClientID &l_client);
-    ClientID GetClientID(sf::IpAddress &l_ip, const PortNumber &l_port);
-    bool RemoveClient(sf::IpAddress &l_ip, const PortNumber &l_port);
+    ClientID GetClientID(const sf::IpAddress &l_ip, const PortNumber &l_port);
+    bool RemoveClient(const sf::IpAddress &l_ip, const PortNumber &l_port);
     bool RemoveClient(const ClientID &l_client);
     bool GetClientInfo(const ClientID &l_client, ClientInfo &l_info);
 
