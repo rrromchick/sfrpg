@@ -16,40 +16,44 @@ public:
     UdpClient();
     ~UdpClient();
 
-    bool Connect();
-    bool Disconnect();
-
-    void Listen();
-    void Update(const sf::Time &l_time);
-    bool Send(sf::Packet &l_packet);
-
     template <class T>
-    void Setup(void(T::*l_handler)(const PacketID&, sf::Packet&, UdpClient*), T *l_instance) {
+    void Setup(void(T::*l_handler)(const PacketID&, sf::Packet&, UdpClient*), T* l_instance) {
         m_packetHandler = std::bind(l_handler, l_instance, std::placeholders::_1,
             std::placeholders::_2, std::placeholders::_3);
     }
     void Setup(void(*l_handler)(const PacketID&, sf::Packet&, UdpClient*));
-    void UnregisterPacketHandler();
+
+    bool Connect();
+    bool Disconnect();
+
+    void Listen();
+    bool Send(sf::Packet& l_packet);
 
     const sf::Time& GetTime() const;
     const sf::Time& GetLastHeartbeat() const;
-    void SetTime(const sf::Time &l_time);
-    void SetServerInformation(const sf::IpAddress &l_ip, const PortNumber &l_port);
+    void SetTime(const sf::Time& l_time);
+    void SetServerInformation(const sf::IpAddress& l_ip, const PortNumber& l_port);
+    void SetPlayerName(const std::string& l_name);
+
+    void Update(const sf::Time& l_time);
 
     bool IsConnected() const;
-    void SetPlayerName(const std::string &l_name);
+    void UnregisterPacketHandler();
+
     sf::Mutex& GetMutex();
 private:
     std::string m_playerName;
 
     sf::UdpSocket m_socket;
-    PacketHandler m_packetHandler;
     sf::IpAddress m_serverIp;
     PortNumber m_serverPort;
+    PacketHandler m_packetHandler;
+    
     sf::Time m_serverTime;
     sf::Time m_lastHeartbeat;
 
     bool m_connected;
+    
     sf::Thread m_listenThread;
     sf::Mutex m_mutex;
 };

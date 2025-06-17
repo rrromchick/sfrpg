@@ -1,8 +1,6 @@
 #include "UdpClient.h"
-#include <SFML/Network.hpp>
-#include <iostream>
 
-void HandlePacket(const PacketID& l_id, sf::Packet &l_packet, UdpClient *l_client) {
+void HandlePacket(const PacketID& l_id, sf::Packet& l_packet, UdpClient* l_client) {
     if ((PacketType)l_id == PacketType::Message) {
         std::string msg;
         l_packet >> msg;
@@ -12,27 +10,29 @@ void HandlePacket(const PacketID& l_id, sf::Packet &l_packet, UdpClient *l_clien
     }
 }
 
-void CommandLine(UdpClient *l_client) {
+void CommandLine(UdpClient* l_client) {
     while (l_client->IsConnected()) {
         std::string str;
         std::getline(std::cin, str);
+        
         if (str != "") {
             if (str == "!quit") {
                 l_client->Disconnect();
                 break;
             }
-            sf::Packet message;
-            StampPacket(PacketType::Message, message);
-            message << str;
-            l_client->Send(message);
+
+            sf::Packet packet;
+            StampPacket(PacketType::Message, packet);
+            packet << str;
+            l_client->Send(packet);
         }
     }
 }
 
-int main(int argc, char *argv[])  {
+int main(int argc, char* argv[]) {
     sf::IpAddress ip;
     PortNumber port;
-    
+
     if (argc == 1) {
         std::cout << "Enter server IP: ";
         std::cin >> ip;
@@ -46,8 +46,9 @@ int main(int argc, char *argv[])  {
     }
 
     UdpClient client;
-    client.SetServerInformation(ip, port);
     client.Setup(HandlePacket);
+    client.SetServerInformation(ip, port);
+
     sf::Thread c(&CommandLine, &client);
 
     if (client.Connect()) {
@@ -58,9 +59,11 @@ int main(int argc, char *argv[])  {
             client.Update(clock.restart());
         }
     } else {
-        std::cout << "Failed to connect!" << std::endl;
+        std::cout << "Failed to connect to the server" << std::endl;
     }
 
     std::cout << "Quitting..." << std::endl;
+    sf::sleep(sf::milliseconds(1));
+
     return 0;
 }

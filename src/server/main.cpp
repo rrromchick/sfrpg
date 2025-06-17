@@ -1,41 +1,43 @@
 #include "UdpServer.h"
 
-void HandlePacket(sf::IpAddress &l_ip, const PortNumber &l_port, const PacketID &l_pid, sf::Packet &l_packet, UdpServer *l_server) {
+void HandlePacket(sf::IpAddress& l_ip, const PortNumber& l_port, const PacketID& l_id, sf::Packet& l_packet, UdpServer* l_server) {
     ClientID cid = l_server->GetClientID(l_ip, l_port);
     if (cid >= 0) {
-        if ((PacketType)l_pid == PacketType::Disconnect) {
+        if ((PacketType)l_id == PacketType::Disconnect) {
             l_server->RemoveClient(cid);
-            std::string message = "Client " + std::to_string(cid) + " has left.";
+            std::string msg;
+            msg = "Client " + std::to_string(cid) + " has left.";
             sf::Packet packet;
             StampPacket(PacketType::Message, packet);
-            l_server->Broadcast(packet);
-        }
-        if ((PacketType)l_pid == PacketType::Message) {
+            packet << msg;
+            l_server->Broadcast(packet, cid);
+        } else if ((PacketType)l_id == PacketType::Message) {
             std::string receivedMessage;
             l_packet >> receivedMessage;
-            std::string msg = l_ip.toString() + ":" + std::to_string(l_port) + " " + receivedMessage;
+            std::string msg;
+            msg = l_ip.toString() + ":" + std::to_string(l_port) + " " + receivedMessage;
             sf::Packet packet;
             StampPacket(PacketType::Message, packet);
             packet << msg;
             l_server->Broadcast(packet, cid);
         }
     } else {
-        if ((PacketType)l_pid == PacketType::Connect) {
-            ClientID id = l_server->AddClient(l_ip, l_port);
+        if ((PacketType)l_id == PacketType::Connect) {
+            ClientID cid = l_server->AddClient(l_ip, l_port);
             sf::Packet packet;
             StampPacket(PacketType::Connect, packet);
-            l_server->Send(id, packet);
+            l_server->Send(cid, packet);
         }
     }
 }
 
-void CommandLine(UdpServer *l_server) {
+void CommandLine(UdpServer* l_server) {
     while (l_server->IsRunning()) {
         std::string str;
         std::getline(std::cin, str);
-        if (str == "!q") {
+        if (str == "!quit") {
             l_server->Stop();
-            return;
+            break;
         } else if (str == "dc") {
             std::cout << "Disconnecting all clients..." << std::endl;
             l_server->DisconnectAll();
@@ -52,9 +54,12 @@ int main() {
         sf::Thread c(&CommandLine, &server);
         c.launch();
         sf::Clock clock;
+        clock.restart();
         while (server.IsRunning()) {
             server.Update(clock.restart());
         }
     }
+    
+    std::cout << "Quitting..." << std::endl;
     return 0;
-}   
+}
