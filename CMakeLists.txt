@@ -21,9 +21,11 @@ FetchContent_MakeAvailable(SFML)
 
 add_library(common STATIC src/common/PacketTypes.h src/common/PacketTypes.cpp src/common/NetworkDefinitions.h)
 
-add_executable(client src/client/main.cpp src/client/UdpClient.h src/client/UdpClient.cpp)
+add_executable(client src/client/main.cpp src/client/UdpClient.h src/client/UdpClient.cpp
+    src/client/TcpClient.h src/client/TcpClient.cpp)
 
-add_executable(server src/server/main.cpp src/server/UdpServer.h src/server/UdpServer.cpp)
+add_executable(server src/server/main.cpp src/server/UdpServer.h src/server/UdpServer.cpp
+    src/server/TcpServer.h src/server/TcpServer.cpp)
 
 target_link_libraries(common sfml-graphics)
 target_link_libraries(common sfml-window)
