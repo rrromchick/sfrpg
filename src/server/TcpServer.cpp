@@ -84,51 +84,60 @@ void TcpServer::Listen() {
     std::cout << "Beginning to listen..." << std::endl;
     while (m_running) {
         if (m_selector.wait()) {
-            sf::Lock lock(m_mutex);
+            if (m_selector.isReady(m_listener)) {
+                sf::TcpSocket* newSocket = new sf::TcpSocket();
+                if (m_listener.accept(*newSocket) == sf::Socket::Done) {
+                    m_selector.add(*newSocket);
+                } else {
+                    delete newSocket;
+                }
+            } else {
+                sf::Lock lock(m_mutex);
 
-            for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
-                if (m_selector.isReady(*itr->second.m_socket)) {
-                    sf::Packet packet;
-                    sf::Socket::Status status = itr->second.m_socket->receive(packet);
+                for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
+                    if (m_selector.isReady(*itr->second.m_socket)) {
+                        sf::Packet packet;
+                        sf::Socket::Status status = itr->second.m_socket->receive(packet);
 
-                    if (status != sf::Socket::Done) {
-                        if (m_running) {
-                            std::cout << "Failed receiving a packet from client " << itr->second.m_clientIP << ":" << itr->second.m_clientPORT  
-                                << ". Status code: " << status << std::endl;
-                            continue;
-                        } else {
-                            std::cout << "Socket unbound." << std::endl;
-                            break;
+                        if (status != sf::Socket::Done) {
+                            if (m_running) {
+                                std::cout << "Failed receiving a packet from client " << itr->second.m_clientIP << ":" << itr->second.m_clientPORT  
+                                    << ". Status code: " << status << std::endl;
+                                continue;
+                            } else {
+                                std::cout << "Socket unbound." << std::endl;
+                                break;
+                            }
                         }
-                    }
 
-                    m_totalReceived += packet.getDataSize();
+                        m_totalReceived += packet.getDataSize();
 
-                    PacketID id;
-                    if (!(packet >> id)) {
-                        std::cout << "Invalid packet received: unable to extract id." << std::endl;
-                        continue;
-                    }
-                    PacketType pType = (PacketType)id;
-                    if (pType < PacketType::Disconnect || pType >= PacketType::OutOfBounds) {
-                        std::cout << "Invalid packet received: unknown type." << std::endl;
-                        continue;
-                    }
-
-                    if (pType == PacketType::Heartbeat) {
-                        if (!itr->second.m_heartbeatWaiting) {
-                            std::cout << "Invalid heartbeat packet received!" << std::endl;
+                        PacketID id;
+                        if (!(packet >> id)) {
+                            std::cout << "Invalid packet received: unable to extract id." << std::endl;
                             continue;
                         }
-                        itr->second.m_ping = m_serverTime.asMilliseconds() - itr->second.m_lastHeartbeat.asMilliseconds();
-                        itr->second.m_lastHeartbeat = m_serverTime;
-                        itr->second.m_heartbeatWaiting = false;
-                        itr->second.m_heartbeatRetry = 0;
-                    } else if (m_packetHandler) {
-                        m_packetHandler(itr->second.m_socket, id, packet, this);
+                        PacketType pType = (PacketType)id;
+                        if (pType < PacketType::Disconnect || pType >= PacketType::OutOfBounds) {
+                            std::cout << "Invalid packet received: unknown type." << std::endl;
+                            continue;
+                        }
+
+                        if (pType == PacketType::Heartbeat) {
+                            if (!itr->second.m_heartbeatWaiting) {
+                                std::cout << "Invalid heartbeat packet received!" << std::endl;
+                                continue;
+                            }
+                            itr->second.m_ping = m_serverTime.asMilliseconds() - itr->second.m_lastHeartbeat.asMilliseconds();
+                            itr->second.m_lastHeartbeat = m_serverTime;
+                            itr->second.m_heartbeatWaiting = false;
+                            itr->second.m_heartbeatRetry = 0;
+                        } else if (m_packetHandler) {
+                            m_packetHandler(itr->second.m_socket, id, packet, this);
+                        }
                     }
                 }
-            }
+            }   
         }
     }
 }
