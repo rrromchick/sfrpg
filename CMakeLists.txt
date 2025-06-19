@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(SFRPG LANGUAGES CXX)
+project(SFRPG LANGUAGES CXX C)
 
 enable_language(CXX)
 
@@ -19,7 +19,8 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-add_library(common STATIC src/common/PacketTypes.h src/common/PacketTypes.cpp src/common/NetworkDefinitions.h)
+add_library(common STATIC src/common/PacketTypes.h src/common/PacketTypes.cpp src/common/NetworkDefinitions.h
+    src/common/sqlite3.h src/common/sqlite3.c src/common/DbConnector.h src/common/DbConnector.cpp)
 
 add_executable(client src/client/main.cpp src/client/UdpClient.h src/client/UdpClient.cpp)
 
