@@ -25,10 +25,6 @@ add_executable(client src/client/main.cpp src/client/UdpClient.h src/client/UdpC
 
 add_executable(server src/server/main.cpp src/server/UdpServer.h src/server/UdpServer.cpp)
 
-add_executable(tcpClient src/client/tcpMain.cpp src/client/TcpClient.h src/client/TcpClient.cpp)
-
-add_executable(tcpServer src/server/tcpMain.cpp src/server/TcpServer.h src/server/TcpServer.cpp)
-
 target_link_libraries(common sfml-graphics)
 target_link_libraries(common sfml-window)
 target_link_libraries(common sfml-system)
@@ -37,15 +33,9 @@ target_link_libraries(common sfml-network)
 
 target_link_libraries(client common)
 target_link_libraries(server common)
-target_link_libraries(tcpClient common)
-target_link_libraries(tcpServer common)
 
 target_include_directories(client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/common)
 target_include_directories(server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/common)
-target_include_directories(tcpClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/common)
-target_include_directories(tcpServer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/common)
 
 target_compile_features(client PRIVATE cxx_std_17)
 target_compile_features(server PRIVATE cxx_std_17)
-target_compile_features(tcpClient PRIVATE cxx_std_17)
-target_compile_features(tcpServer PRIVATE cxx_std_17)

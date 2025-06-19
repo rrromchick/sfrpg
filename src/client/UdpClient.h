@@ -34,6 +34,7 @@ public:
     void SetTime(const sf::Time& l_time);
     void SetServerInformation(const sf::IpAddress& l_ip, const PortNumber& l_port);
     void SetPlayerName(const std::string& l_name);
+    const std::string& GetPlayerName() const;
 
     void Update(const sf::Time& l_time);
 

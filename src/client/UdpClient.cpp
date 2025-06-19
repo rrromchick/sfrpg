@@ -154,3 +154,5 @@ bool UdpClient::IsConnected() const { return m_connected; }
 void UdpClient::UnregisterPacketHandler() { m_packetHandler = nullptr; }
 
 sf::Mutex& UdpClient::GetMutex() { return m_mutex; }
+
+const std::string& UdpClient::GetPlayerName() const { return m_playerName; }

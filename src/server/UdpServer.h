@@ -16,6 +16,8 @@ struct ClientInfo {
         m_heartbeatRetry(0), m_ping(0)
     {}
 
+    void SetName(const std::string& l_name) { m_playerName = l_name; }
+
     ClientInfo& operator =(const ClientInfo& l_rhs) {
         m_clientIP = l_rhs.m_clientIP;
         m_clientPORT = l_rhs.m_clientPORT;
@@ -24,10 +26,12 @@ struct ClientInfo {
         m_heartbeatWaiting = l_rhs.m_heartbeatWaiting;
         m_heartbeatRetry = l_rhs.m_heartbeatRetry;
         m_ping = l_rhs.m_ping;
+        m_playerName = l_rhs.m_playerName;
         
         return *this;
     }
 
+    std::string m_playerName;
     sf::IpAddress m_clientIP;
     PortNumber m_clientPORT;
     sf::Time m_lastHeartbeat;
@@ -71,12 +75,13 @@ public:
     void Listen();
     void Update(const sf::Time& l_time);
 
-    ClientID AddClient(const sf::IpAddress& l_ip, const PortNumber& l_port);
+    ClientID AddClient(const sf::IpAddress& l_ip, const PortNumber& l_port, const std::string& l_name);
     ClientID GetClientID(const sf::IpAddress& l_ip, const PortNumber& l_port);
     bool HasClient(const ClientID& l_client);
     bool HasClient(const sf::IpAddress& l_ip, const PortNumber& l_port);
     bool RemoveClient(const ClientID& l_client);
     bool RemoveClient(const sf::IpAddress& l_ip, const PortNumber& l_port);
+    bool GetClientInfo(const ClientID& l_client, ClientInfo& l_info);
 
     bool IsRunning() const;
     unsigned int GetClientCount();

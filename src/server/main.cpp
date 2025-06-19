@@ -14,8 +14,10 @@ void HandlePacket(sf::IpAddress& l_ip, const PortNumber& l_port, const PacketID&
         } else if ((PacketType)l_id == PacketType::Message) {
             std::string receivedMessage;
             l_packet >> receivedMessage;
+            ClientInfo info(l_ip, l_port, sf::Time::Zero);
+            l_server->GetClientInfo(cid, info);
             std::string msg;
-            msg = l_ip.toString() + ":" + std::to_string(l_port) + " " + receivedMessage;
+            msg = info.m_playerName + ": " + receivedMessage;
             sf::Packet packet;
             StampPacket(PacketType::Message, packet);
             packet << msg;
@@ -23,7 +25,9 @@ void HandlePacket(sf::IpAddress& l_ip, const PortNumber& l_port, const PacketID&
         }
     } else {
         if ((PacketType)l_id == PacketType::Connect) {
-            ClientID cid = l_server->AddClient(l_ip, l_port);
+            std::string name;
+            l_packet >> name;
+            ClientID cid = l_server->AddClient(l_ip, l_port, name);
             sf::Packet packet;
             StampPacket(PacketType::Connect, packet);
             l_server->Send(cid, packet);

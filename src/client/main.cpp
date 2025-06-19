@@ -32,15 +32,20 @@ void CommandLine(UdpClient* l_client) {
 int main(int argc, char* argv[]) {
     sf::IpAddress ip;
     PortNumber port;
+    std::string playerName;
 
     if (argc == 1) {
         std::cout << "Enter server IP: ";
         std::cin >> ip;
         std::cout << "Enter server PORT: ";
         std::cin >> port;
+        std::cout << "Enter name: ";
+        std::cin >> playerName;
     } else if (argc == 3) {
         ip = argv[1];
         port = atoi(argv[2]);
+        std::cout << "Enter name: ";
+        std::cin >> playerName;
     } else {
         return 0;
     }
@@ -48,6 +53,7 @@ int main(int argc, char* argv[]) {
     UdpClient client;
     client.Setup(HandlePacket);
     client.SetServerInformation(ip, port);
+    client.SetPlayerName(playerName);
 
     sf::Thread c(&CommandLine, &client);
 

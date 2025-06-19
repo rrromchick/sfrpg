@@ -182,7 +182,7 @@ void UdpServer::BindTimeoutHandler(void(*l_handler)(const ClientID&)) {
     m_timeoutHandler = std::bind(l_handler, std::placeholders::_1);
 }
 
-ClientID UdpServer::AddClient(const sf::IpAddress& l_ip, const PortNumber& l_port) {
+ClientID UdpServer::AddClient(const sf::IpAddress& l_ip, const PortNumber& l_port, const std::string& l_name) {
     sf::Lock lock(m_mutex);
     for (auto itr = m_clients.begin(); itr != m_clients.end(); ++itr) {
         if (itr->second.m_clientIP == l_ip && itr->second.m_clientPORT == l_port) {
@@ -191,6 +191,7 @@ ClientID UdpServer::AddClient(const sf::IpAddress& l_ip, const PortNumber& l_por
     }
     ClientID cid = m_lastID;
     ClientInfo info(l_ip, l_port, m_serverTime);
+    info.SetName(l_name);
     m_clients.emplace(cid, info);
     ++m_lastID;
     return cid;
@@ -279,3 +280,12 @@ void UdpServer::Setup() {
 }
 
 sf::Mutex& UdpServer::GetMutex() { return m_mutex; }
+
+bool UdpServer::GetClientInfo(const ClientID& l_client, ClientInfo& l_info) {
+    if (!m_running) return false;
+    sf::Lock lock(m_mutex);
+    auto itr = m_clients.find(l_client);
+    if (itr == m_clients.end()) return false;
+    l_info = itr->second;
+    return true;
+}
