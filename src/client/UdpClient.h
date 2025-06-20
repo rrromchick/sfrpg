@@ -3,6 +3,7 @@
 #include <SFML/Network.hpp>
 #include "PacketTypes.h"
 #include "NetworkDefinitions.h"
+#include "UserData.h"
 #include <functional>
 #include <iostream>
 
@@ -35,6 +36,7 @@ public:
     void SetServerInformation(const sf::IpAddress& l_ip, const PortNumber& l_port);
     void SetPlayerName(const std::string& l_name);
     const std::string& GetPlayerName() const;
+    void SetUserData(const UserData& l_data);
 
     void Update(const sf::Time& l_time);
 
@@ -57,4 +59,6 @@ private:
     
     sf::Thread m_listenThread;
     sf::Mutex m_mutex;
+
+    UserData m_userData;
 };

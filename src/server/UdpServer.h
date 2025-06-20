@@ -4,6 +4,7 @@
 #include "PacketTypes.h"
 #include "NetworkDefinitions.h"
 #include "DbConnector.h"
+#include "UserData.h"
 #include <functional>
 #include <unordered_map>
 #include <iostream>
@@ -55,6 +56,8 @@ public:
     {
         m_packetHandler = std::bind(l_handler, l_instance, std::placeholders::_1, std::placeholders::_2,
             std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+        m_database.Open("rpg.db");
+        m_database.Init();
     }
     UdpServer(void(*l_handler)(sf::IpAddress&, const PortNumber&, const PacketID&, sf::Packet&, UdpServer*));
     ~UdpServer();
@@ -88,8 +91,11 @@ public:
     unsigned int GetClientCount();
     std::string GetClientList();
     void Setup();
+    void IncrementUsersCount();
+    unsigned int GetUsersCount() const;
 
     sf::Mutex& GetMutex();
+    DbConnector* GetDatabase();
 private:
     sf::UdpSocket m_incoming;
     sf::UdpSocket m_outgoing;
@@ -108,4 +114,5 @@ private:
     size_t m_totalReceived;
 
     DbConnector m_database;
+    unsigned int m_usersCount;
 };

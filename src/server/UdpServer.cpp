@@ -5,6 +5,8 @@ UdpServer::UdpServer(void(*l_handler)(sf::IpAddress&, const PortNumber&, const P
 {
     m_packetHandler = std::bind(l_handler, std::placeholders::_1, std::placeholders::_2,
         std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+    m_database.Open("rpg.db");
+    m_database.Init();
 }
 
 UdpServer::~UdpServer() { Stop(); }
@@ -277,6 +279,7 @@ void UdpServer::Setup() {
     m_running = false;
     m_totalSent = 0;
     m_totalReceived = 0;
+    m_usersCount = 0;
 }
 
 sf::Mutex& UdpServer::GetMutex() { return m_mutex; }
@@ -289,3 +292,9 @@ bool UdpServer::GetClientInfo(const ClientID& l_client, ClientInfo& l_info) {
     l_info = itr->second;
     return true;
 }
+
+DbConnector* UdpServer::GetDatabase() { return &m_database; }
+
+void UdpServer::IncrementUsersCount() { ++m_usersCount; }
+
+unsigned int UdpServer::GetUsersCount() const { return m_usersCount; }

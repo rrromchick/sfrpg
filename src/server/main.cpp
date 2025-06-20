@@ -22,6 +22,49 @@ void HandlePacket(sf::IpAddress& l_ip, const PortNumber& l_port, const PacketID&
             StampPacket(PacketType::Message, packet);
             packet << msg;
             l_server->Broadcast(packet, cid);
+        } else if ((PacketType)l_id == PacketType::Register) {
+            std::string firstName, lastName, password, email;
+            if (!(l_packet >> firstName) || !(l_packet >> lastName) || 
+                !(l_packet >> password) || !(l_packet >> email))
+            { return; }
+            int sz = l_server->GetDatabase()->SelectFromUsers(-1, firstName, lastName, "", "").size();
+            sz += l_server->GetDatabase()->SelectFromUsers(-1, "", "", "", email).size();
+            if (sz > 0) {
+                sf::Packet packet;
+                StampPacket(PacketType::Register, packet);
+                packet << (unsigned int)Network::NullID;
+                return;
+            } else {
+                l_server->GetDatabase()->InsertIntoUsers(l_server->GetUsersCount(), firstName, lastName, password, email);
+                sf::Packet packet;
+                StampPacket(PacketType::Register, packet);
+                packet << l_server->GetUsersCount();
+                l_server->Send(cid, packet);
+                l_server->IncrementUsersCount();
+            }
+        } else if ((PacketType)l_id == PacketType::Login) {
+            std::string firstName, lastName, password, email;
+            if (!(l_packet >> firstName) || !(l_packet >> lastName) || 
+                !(l_packet >> password) || !(l_packet >> email))
+            { return; }
+            DbResult result = l_server->GetDatabase()->SelectFromUsers(-1, firstName, lastName, password, email);
+            if (result.size() != 1) {
+                sf::Packet packet;
+                StampPacket(PacketType::Login, packet);
+                packet << (unsigned int)Network::NullID;
+                return;
+            } else {
+                UserData data;
+                data.m_id = atoi(result[0].at("ID").c_str());
+                data.m_firstName = result[0].at("FIRSTNAME");
+                data.m_lastName = result[0].at("LASTNAME");
+                data.m_password = result[0].at("PASSWORD");
+                data.m_email = result[0].at("EMAIL");
+                sf::Packet packet;
+                StampPacket(PacketType::Login, packet);
+                packet << data.m_id << data;
+                l_server->Send(cid, packet);
+            }
         }
     } else {
         if ((PacketType)l_id == PacketType::Connect) {

@@ -20,7 +20,8 @@ FetchContent_Declare(SFML
 FetchContent_MakeAvailable(SFML)
 
 add_library(common STATIC src/common/PacketTypes.h src/common/PacketTypes.cpp src/common/NetworkDefinitions.h
-    src/common/sqlite3.h src/common/sqlite3.c src/common/DbConnector.h src/common/DbConnector.cpp)
+    src/common/sqlite3.h src/common/sqlite3.c src/common/DbConnector.h src/common/DbConnector.cpp
+    src/common/UserData.h src/common/UserData.cpp src/common/MessageData.h src/common/MessageData.cpp)
 
 add_executable(client src/client/main.cpp src/client/UdpClient.h src/client/UdpClient.cpp)
 

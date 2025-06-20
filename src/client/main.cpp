@@ -5,16 +5,22 @@ void HandlePacket(const PacketID& l_id, sf::Packet& l_packet, UdpClient* l_clien
         std::string msg;
         l_packet >> msg;
         std::cout << msg << std::endl;
+    } else if ((PacketType)l_id == PacketType::Register) {
+        int id;
+        if (!(l_packet >> id)) return;
+        if (id == (int)Network::NullID) { std::cout << "Failed to sign up!" << std::endl; }
+        std::cout << "Signed up successfully." << std::endl;
+    } else if ((PacketType)l_id == PacketType::Login) {
+        int id;
+        if (!(l_packet >> id)) return;
+        if (id == (int)Network::NullID) { std::cout << "Failed to log in!" << std::endl; return; }
+        UserData data;
+        l_packet >> data;
+        l_client->SetUserData(data);
+        std::cout << "Logged in successfully." << std::endl;
     } else if ((PacketType)l_id == PacketType::Disconnect) {
         l_client->Disconnect();
     }
-}
-
-void displayMenu() {
-    std::cout << "Enter your choice: " << std::endl;
-    std::cout << "\t1) Sign up" << std::endl;
-    std::cout << "\t2) Log in" << std::endl;
-    std::cout << "\t3) Open chat" << std::endl;
 }
 
 void CommandLine(UdpClient* l_client) {
@@ -26,6 +32,40 @@ void CommandLine(UdpClient* l_client) {
             if (str == "!quit") {
                 l_client->Disconnect();
                 break;
+            } else if (str == "register") {
+                sf::Packet packet;
+                StampPacket(PacketType::Register, packet);
+                std::string firstName, lastName, password, repeatPassword, email;
+                std::cout << "Enter your first name: ";
+                std::cin >> firstName;
+                std::cout << "Enter your last name: ";
+                std::cin >> lastName;
+                std::cout << "Enter your password: ";
+                std::cin >> password;
+                std::cout << "Repeat password: ";
+                std::cin >> repeatPassword;
+                while (repeatPassword != password) {
+                    std::cout << "Passwords differ! Try again." << std::endl;
+                    std::cin >> repeatPassword;
+                }
+                std::cout << "Enter your email address: ";
+                std::cin >> email;
+                packet << firstName << lastName << password << email;
+                l_client->Send(packet);
+            } else if (str == "login") {
+                sf::Packet packet;
+                StampPacket(PacketType::Login, packet);
+                std::string firstName, lastName, password, email;
+                std::cout << "Enter your first name: ";
+                std::cin >> firstName;
+                std::cout << "Enter your last name: ";
+                std::cin >> lastName;
+                std::cout << "Enter your password: ";
+                std::cin >> password;
+                std::cout << "Enter your email address: ";
+                std::cin >> email;
+                packet << firstName << lastName << password << email;
+                l_client->Send(packet);
             }
 
             sf::Packet packet;

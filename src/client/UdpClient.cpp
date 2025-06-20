@@ -156,3 +156,5 @@ void UdpClient::UnregisterPacketHandler() { m_packetHandler = nullptr; }
 sf::Mutex& UdpClient::GetMutex() { return m_mutex; }
 
 const std::string& UdpClient::GetPlayerName() const { return m_playerName; }
+
+void UdpClient::SetUserData(const UserData& l_data) { m_userData = l_data; }

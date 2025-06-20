@@ -24,7 +24,7 @@ bool DbConnector::Init() {
 
     char* errMsg = nullptr;
     char* sql = "CREATE TABLE IF NOT EXISTS USER("
-                "ID INT PRIMARY KEY NOT NULL"
+                "ID INT PRIMARY KEY NOT NULL AUTOINCREMENT"
                 "FIRST_NAME VARCHAR(50) NOT NULL"
                 "LAST_NAME VARCHAR(50) NOT NULL"
                 "PASSWORD VARCHAR(24) NOT NULL"
@@ -40,7 +40,7 @@ bool DbConnector::Init() {
     }
 
     sql = "CREATE TABLE IF NOT EXISTS MESSAGE("
-          "ID INT PRIMARY KEY NOT NULL"
+          "ID INT PRIMARY KEY NOT NULL AUTOINCREMENT"
           "TIMESTAMP TEXT NOT NULL"
           "SENDER INTEGER NOT NULL"
           "RECEIVER INTEGER NOT NULL"
@@ -145,7 +145,7 @@ bool DbConnector::InsertIntoUsers(int l_id, const std::string& l_firstName, cons
     const std::string& l_email) 
 {
     std::string sql = "INSERT INTO 'USER' VALUES(";
-    sql += l_id + ", '" + l_firstName + "', '" + l_lastName + "', '" + l_password + "', '" + l_email + "');";
+    sql += std::to_string(l_id) + ", " + l_firstName + "', '" + l_lastName + "', '" + l_password + "', '" + l_email + "');";
     return Execute(sql);
 }
 
@@ -190,7 +190,7 @@ bool DbConnector::DeleteFromMessages(int l_id, const std::string& l_timestamp, i
 
 bool DbConnector::InsertIntoMessages(int l_id, const std::string& l_timestamp, int l_sender, int l_receiver, const std::string& l_content) {
     std::string sql = "INSERT INTO 'MESSAGE' VALUES(";
-    sql += l_id + ", '" + l_timestamp + "', '" + std::to_string(l_sender) + "', '" + std::to_string(l_receiver) + "', '" + l_content + "');";
+    sql += std::to_string(l_id) + ", " + l_timestamp + "', '" + std::to_string(l_sender) + "', '" + std::to_string(l_receiver) + "', '" + l_content + "');";
     return Execute(sql);
 }
 
