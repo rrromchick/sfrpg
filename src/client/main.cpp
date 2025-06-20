@@ -10,6 +10,13 @@ void HandlePacket(const PacketID& l_id, sf::Packet& l_packet, UdpClient* l_clien
     }
 }
 
+void displayMenu() {
+    std::cout << "Enter your choice: " << std::endl;
+    std::cout << "\t1) Sign up" << std::endl;
+    std::cout << "\t2) Log in" << std::endl;
+    std::cout << "\t3) Open chat" << std::endl;
+}
+
 void CommandLine(UdpClient* l_client) {
     while (l_client->IsConnected()) {
         std::string str;

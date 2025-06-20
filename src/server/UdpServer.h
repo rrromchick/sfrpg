@@ -3,6 +3,7 @@
 #include <SFML/Network.hpp>
 #include "PacketTypes.h"
 #include "NetworkDefinitions.h"
+#include "DbConnector.h"
 #include <functional>
 #include <unordered_map>
 #include <iostream>
@@ -105,4 +106,6 @@ private:
 
     size_t m_totalSent;
     size_t m_totalReceived;
+
+    DbConnector m_database;
 };
