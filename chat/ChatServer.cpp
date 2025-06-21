@@ -3,7 +3,7 @@
 #include <chrono>
 #include <utility>
 
-ChatServer::ChatServer(ServerProtocol l_protocol, MessageQueue* l_incomingQueue)
+ChatServer::ChatServer(ServerProtocol l_protocol, MessageQueue& l_incomingQueue)
     : m_protocol(l_protocol), m_incomingQueue(l_incomingQueue),
     m_running(false), m_lastUdpClientPort(0), m_port(0)
 {
@@ -123,7 +123,7 @@ void ChatServer::tcpServerLoop() {
 
                     unsigned short clientPort = newClientSocket->getRemotePort();
                     m_tcpClientMap[clientPort] = newClientSocket;
-                    m_incomingQueue->push("New TCP client connected from " + newClientSocket->getRemoteAddress().toString() + ":" + std::to_string(clientPort));
+                    m_incomingQueue.push("New TCP client connected from " + newClientSocket->getRemoteAddress().toString() + ":" + std::to_string(clientPort));
                     std::cout << "New TCP client connected from " << newClientSocket->getRemoteAddress().toString() + ":" << std::to_string(clientPort) << std::endl;
                 } else {
                     std::cerr << "Error accepting new TCP connection." << std::endl;
@@ -142,7 +142,7 @@ void ChatServer::tcpServerLoop() {
                     if (client->receive(buffer, sizeof(buffer), received) == sf::Socket::Done) {
                         buffer[received] = '\0';
                         std::string msg = buffer;
-                        m_incomingQueue->push("[TCP]" + client->getRemoteAddress().toString() + std::to_string(client->getRemotePort()) + ": " + msg);
+                        m_incomingQueue.push("[TCP]" + client->getRemoteAddress().toString() + std::to_string(client->getRemotePort()) + ": " + msg);
 
                         for (const auto& other_pair : m_tcpClientMap) {
                             if (other_pair.first != clientId) {
@@ -153,7 +153,7 @@ void ChatServer::tcpServerLoop() {
                         }
                     } else if (client->receive(buffer, sizeof(buffer), received) == sf::Socket::Disconnected) {
                         std::cout << "TCP client disconnected: " << client->getRemoteAddress().toString() << ":" << std::to_string(client->getRemotePort()) << std::endl;
-                        m_incomingQueue->push("TCP client disconnected: " + client->getRemoteAddress().toString() + ":" + std::to_string(client->getRemotePort()));
+                        m_incomingQueue.push("TCP client disconnected: " + client->getRemoteAddress().toString() + ":" + std::to_string(client->getRemotePort()));
                         clientsToRemove.push_back(clientId);
                         m_selector.remove(*client);
                     } else {
@@ -182,7 +182,7 @@ void ChatServer::udpServerLoop() {
             buffer[received] = '\0';
             m_lastUdpClientIp = remoteIp;
             m_lastUdpClientPort = remotePort;
-            m_incomingQueue->push("[UDP] " + remoteIp.toString() + ":" + std::to_string(remotePort) + ": " + buffer);
+            m_incomingQueue.push("[UDP] " + remoteIp.toString() + ":" + std::to_string(remotePort) + ": " + buffer);
         } else if (status == sf::Socket::NotReady) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         } else if (status == sf::Socket::Error) {

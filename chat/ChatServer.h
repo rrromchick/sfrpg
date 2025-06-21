@@ -18,7 +18,7 @@ enum class ServerProtocol {
 
 class ChatServer {
 public:
-    ChatServer(ServerProtocol l_protocol, MessageQueue* l_incomingQueue);
+    ChatServer(ServerProtocol l_protocol, MessageQueue& l_incomingQueue);
     ~ChatServer();
 
     bool start(unsigned short l_port);
@@ -28,7 +28,7 @@ public:
     std::string getStatus() const;
 private:
     ServerProtocol m_protocol;
-    MessageQueue* m_incomingQueue;
+    MessageQueue& m_incomingQueue;
 
     std::unique_ptr<sf::TcpListener> m_tcpListener;
     std::unique_ptr<sf::UdpSocket> m_udpSocket;
