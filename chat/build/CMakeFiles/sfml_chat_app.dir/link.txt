@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/sfml_chat_app.dir/main.cpp.o CMakeFiles/sfml_chat_app.dir/MessageQueue.cpp.o CMakeFiles/sfml_chat_app.dir/ChatServer.cpp.o CMakeFiles/sfml_chat_app.dir/ChatClient.cpp.o -o sfml_chat_app  /usr/lib/x86_64-linux-gnu/libsfml-network.so.2.6.1 /usr/lib/x86_64-linux-gnu/libsfml-system.so.2.6.1 

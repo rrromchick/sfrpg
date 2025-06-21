@@ -1,0 +1,3 @@
+/home/vboxuser/projects/sfrpg/chat/build/CMakeFiles/sfml_chat_app.dir
+/home/vboxuser/projects/sfrpg/chat/build/CMakeFiles/edit_cache.dir
+/home/vboxuser/projects/sfrpg/chat/build/CMakeFiles/rebuild_cache.dir
