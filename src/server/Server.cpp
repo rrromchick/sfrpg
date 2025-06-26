@@ -199,8 +199,13 @@ void Server::tcpListen() {
                             }
                         } else if (status == sf::Socket::Disconnected) {
                             removeClient(itr->first);
+                            clientsToRemove.emplace_back(itr->first);
                         }
                     }
+                }
+
+                for (const auto& id : clientsToRemove) {
+                    m_tcpClients.erase(m_tcpClients.find(id));
                 }
             }
         }
