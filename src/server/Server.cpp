@@ -9,6 +9,7 @@ Server::Server(void(*l_handler)(sf::IpAddress&, const PortNumber&, const PacketI
     m_tcpListener = std::make_unique<sf::TcpListener>();
     m_udpIncoming = std::make_unique<sf::UdpSocket>();
     m_udpOutgoing = std::make_unique<sf::UdpSocket>();
+    m_db = nullptr;
 }
 
 Server::~Server() { stop(); }
@@ -20,6 +21,9 @@ bool Server::start() {
     m_udpOutgoing->bind(sf::Socket::AnyPort);
     if (m_tcpListener->listen((unsigned short)Network::ServerPort) != sf::Socket::Done) return false;
     m_selector.add(*m_tcpListener);
+    
+    if (!initDatabase("rpg.db")) return false;
+
     setUp();
     m_running = true;
 
@@ -451,4 +455,100 @@ std::string Server::getClientList() const {
         + std::to_string(m_totalReceived / 1000) + " kB.";
         
     return list;
+}
+
+std::string Server::hashPassword(const std::string& l_password) {
+    return std::to_string(std::hash<std::string>{}(l_password));
+}
+
+bool Server::initDatabase(const std::string& l_dbPath) {
+    try {
+        m_db = std::make_unique<SQLite::Database>(
+            new SQLite::Database(l_dbPath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE));
+       
+        m_db->exec("CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL);");
+        m_db->exec("CREATE TABLE IF NOT EXISTS message (id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER NOT NULL, receiver INTEGER NOT NULL,"
+            "content TEXT NOT NULL FOREIGN KEY (sender) REFERENCES user(id) FOREIGN KEY (receiver) REFERENCES user(id));");
+        
+        std::cout << "Database initialized successfully." << std::endl;
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to initialize database!" << std::endl;
+        return false;
+    }
+}
+
+bool Server::registerUser(const std::string& l_username, const std::string& l_password) {
+    std::string hashedPassword = hashPassword(l_password);
+
+    try {
+        SQLite::Statement query(*m_db, "INSERT INTO user (username, password) VALUES (?, ?)");
+
+        query.bind(1, l_username);
+        query.bind(2, hashedPassword);
+        query.exec();
+
+        std::cout << "User '" << l_username << "' registered." << std::endl;
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to register user! Error: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Server::authenticateUser(const std::string& l_username, const std::string& l_password) {
+    std::string hashedPassword = hashPassword(l_password);
+
+    try {
+        SQLite::Statement query(*m_db, "SELECT password FROM user WHERE username = ?");
+
+        query.bind(1, l_username);
+        if (query.executeStep()) {
+            std::string receivedPwd = query.getColumn(0);
+            return receivedPwd == hashedPassword;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to authenticate user! Error: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Server::addMessage(unsigned int l_sender, unsigned int l_receiver, const std::string& l_content) {
+    try {
+        SQLite::Statement query(*m_db, "INSERT INTO message (sender, receiver, content) VALUES (?, ?, ?)");
+
+        query.bind(1, l_sender);
+        query.bind(2, l_receiver);
+        query.bind(3, l_content);
+        query.exec();
+
+        std::cout << "Message has been successfully added!" << std::endl;
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to add message! Error: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+DbResult* Server::getMessagesForUser(const std::string& l_username) {
+    try {
+        SQLite::Statement query(*m_db, "SELECT sender, receiver, content FROM message WHERE (sender = ? OR receiver = ?)");
+
+        query.bind(1, l_username);
+        query.bind(2, l_username);
+
+        DbResult* result = new DbResult();
+        while (query.executeStep()) {
+            unsigned int sender = atoi(query.getColumn(0));
+            unsigned int receiver = atoi(query.getColumn(1));
+            std::string content = query.getColumn(2);
+
+            result->push_back(std::make_tuple(sender, receiver, content));
+        }
+
+        return result;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to get messages! Error: " << e.what() << std::endl;
+        return nullptr;
+    }
 }

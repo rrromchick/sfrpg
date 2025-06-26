@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Network.hpp>
+#include <SQLiteCpp/SQLiteCpp.h>
 #include "NetworkDefinitions.h"
 #include "PacketTypes.h"
 #include <unordered_map>
@@ -48,6 +49,8 @@ class Server;
 using PacketHandler = std::function<void(sf::IpAddress&, const PortNumber&, const PacketID&, sf::Packet&, Server*)>;
 using TimeoutHandler = std::function<void(const ClientID&)>;
 
+using DbResult = std::vector<std::tuple<unsigned int, unsigned int, std::string>>;
+
 class Server {
 public:
     template <class T>
@@ -85,6 +88,14 @@ public:
     bool removeClient(const ClientID& l_client);
     bool removeClient(const sf::IpAddress& l_ip, const PortNumber& l_port);
 
+    bool initDatabase(const std::string& l_dbPath);
+    bool registerUser(const std::string& l_username, const std::string& l_password);
+    bool authenticateUser(const std::string& l_username, const std::string& l_password);
+    bool addMessage(unsigned int l_sender, unsigned int l_received, const std::string& l_content);
+    DbResult* getMessagesForUser(const std::string& l_username);
+
+    std::string hashPassword(const std::string& l_password);
+
     bool isRunning() const;
     unsigned int getClientCount() const;
     std::string getClientList() const;
@@ -95,6 +106,7 @@ private:
     std::unique_ptr<sf::UdpSocket> m_udpIncoming;
     std::unique_ptr<sf::UdpSocket> m_udpOutgoing;
     std::unique_ptr<sf::TcpListener> m_tcpListener;
+    std::unique_ptr<SQLite::Database> m_db;
 
     sf::SocketSelector m_selector;
     std::unordered_map<ClientID, ClientInfo> m_clientMap;
