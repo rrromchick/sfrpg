@@ -6,7 +6,8 @@ using PacketID = sf::Int8;
 
 enum class PacketType {
     Disconnect = -1, Connect, Heartbeat, Message, Snapshot, 
-    Hurt, Player_Update, Register, Login, Sql, OutOfBounds 
+    Hurt, Player_Update, Register, Login, Sql, ChatMessage, Chat,
+    OutOfBounds 
 };
 
 void stampPacket(const PacketType& l_type, sf::Packet& l_packet);

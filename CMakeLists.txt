@@ -21,20 +21,12 @@ FetchContent_MakeAvailable(SFML)
 
 add_subdirectory(SQLiteCpp)
 
-add_subdirectory(SQLiteCpp)
-
 add_library(common STATIC src/common/PacketTypes.h src/common/PacketTypes.cpp src/common/NetworkDefinitions.h)
 
 add_executable(client src/client/main.cpp src/client/Client.h src/client/Client.cpp)
 
 add_executable(server src/server/main.cpp src/server/Server.h src/server/Server.cpp)
 
-target_link_libraries(common PRIVATE sfml-graphics)
-target_link_libraries(common PRIVATE sfml-window)
-target_link_libraries(common PRIVATE sfml-system)
-target_link_libraries(common PRIVATE sfml-audio)
-target_link_libraries(common PRIVATE sfml-network)
-target_link_libraries(common PRIVATE SQLiteCpp sqlite3 pthread dl)
 target_link_libraries(common PRIVATE sfml-graphics)
 target_link_libraries(common PRIVATE sfml-window)
 target_link_libraries(common PRIVATE sfml-system)

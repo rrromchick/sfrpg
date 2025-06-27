@@ -258,3 +258,7 @@ void Client::setTime(const sf::Time& l_time) { m_serverTime = l_time; }
 std::mutex& Client::getMutex() { return m_clientMutex; }
 
 bool Client::isConnected() const { return m_connected; }
+
+const std::string& Client::getUserName() const { return m_username; }
+
+void Client::setUserName(const std::string& l_name) { m_username = l_name; }

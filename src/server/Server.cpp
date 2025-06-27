@@ -464,28 +464,30 @@ std::string Server::hashPassword(const std::string& l_password) {
 bool Server::initDatabase(const std::string& l_dbPath) {
     try {
         m_db = std::make_unique<SQLite::Database>(
-            new SQLite::Database(l_dbPath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE));
-       
-        m_db->exec("CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL);");
-        m_db->exec("CREATE TABLE IF NOT EXISTS message (id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER NOT NULL, receiver INTEGER NOT NULL,"
-            "content TEXT NOT NULL FOREIGN KEY (sender) REFERENCES user(id) FOREIGN KEY (receiver) REFERENCES user(id));");
+            SQLite::Database(l_dbPath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE));
+
+        m_db->exec("CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE,"
+            "username TEXT NOT NULL UNIQUE, password TEXT NOT NULL);");
+        m_db->exec("CREATE TABLE IF NOT EXISTS message (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT NOT NULL, receiver TEXT NOT NULL,"
+            "content TEXT NOT NULL, FOREIGN KEY (sender) REFERENCES user(username), FOREIGN KEY (receiver) REFERENCES user(username));");
         
         std::cout << "Database initialized successfully." << std::endl;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "Failed to initialize database!" << std::endl;
+        std::cerr << "Failed to initialize database! Error: " << e.what() << std::endl;
         return false;
     }
 }
 
-bool Server::registerUser(const std::string& l_username, const std::string& l_password) {
+bool Server::registerUser(const std::string& l_email, const std::string& l_username, const std::string& l_password) {
     std::string hashedPassword = hashPassword(l_password);
 
     try {
-        SQLite::Statement query(*m_db, "INSERT INTO user (username, password) VALUES (?, ?)");
+        SQLite::Statement query(*m_db, "INSERT INTO user (email, username, password) VALUES (?, ?, ?)");
 
-        query.bind(1, l_username);
-        query.bind(2, hashedPassword);
+        query.bind(1, l_email);
+        query.bind(2, l_username);
+        query.bind(3, hashedPassword);
         query.exec();
 
         std::cout << "User '" << l_username << "' registered." << std::endl;
@@ -496,15 +498,19 @@ bool Server::registerUser(const std::string& l_username, const std::string& l_pa
     }
 }
 
-bool Server::authenticateUser(const std::string& l_username, const std::string& l_password) {
+bool Server::authenticateUser(const std::string& l_email, const std::string& l_password, std::string& l_username) {
     std::string hashedPassword = hashPassword(l_password);
 
     try {
-        SQLite::Statement query(*m_db, "SELECT password FROM user WHERE username = ?");
+        SQLite::Statement query(*m_db, "SELECT password, username FROM user WHERE email = ?");
 
-        query.bind(1, l_username);
+        query.bind(1, l_email);
         if (query.executeStep()) {
             std::string receivedPwd = query.getColumn(0);
+            std::string receivedName = query.getColumn(1);
+
+            bool res = receivedPwd == hashedPassword;
+            if (res) l_username = receivedName;
             return receivedPwd == hashedPassword;
         }
     } catch (const std::exception& e) {
@@ -513,7 +519,7 @@ bool Server::authenticateUser(const std::string& l_username, const std::string& 
     }
 }
 
-bool Server::addMessage(unsigned int l_sender, unsigned int l_receiver, const std::string& l_content) {
+bool Server::addMessage(const std::string& l_sender, const std::string& l_receiver, const std::string& l_content) {
     try {
         SQLite::Statement query(*m_db, "INSERT INTO message (sender, receiver, content) VALUES (?, ?, ?)");
 
@@ -539,8 +545,34 @@ DbResult* Server::getMessagesForUser(const std::string& l_username) {
 
         DbResult* result = new DbResult();
         while (query.executeStep()) {
-            unsigned int sender = atoi(query.getColumn(0));
-            unsigned int receiver = atoi(query.getColumn(1));
+            std::string sender = query.getColumn(0);
+            std::string receiver = query.getColumn(1);
+            std::string content = query.getColumn(2);
+
+            result->push_back(std::make_tuple(sender, receiver, content));
+        }
+
+        return result;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to get messages! Error: " << e.what() << std::endl;
+        return nullptr;
+    }
+}
+
+DbResult* Server::getChatMessages(const std::string& l_firstUser, const std::string& l_secondUser) {
+    try {
+        SQLite::Statement query(*m_db, "SELECT sender, receiver, content FROM message WHERE "
+            "((sender = ? OR receiver = ?) AND (sender = ? OR receiver = ?))");
+        
+        query.bind(1, l_firstUser);
+        query.bind(2, l_firstUser);
+        query.bind(3, l_secondUser);
+        query.bind(4, l_secondUser);
+        
+        DbResult* result = new DbResult();
+        while (query.executeStep()) {
+            std::string sender = query.getColumn(0);
+            std::string receiver = query.getColumn(1);
             std::string content = query.getColumn(2);
 
             result->push_back(std::make_tuple(sender, receiver, content));

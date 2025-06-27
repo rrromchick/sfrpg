@@ -49,7 +49,7 @@ class Server;
 using PacketHandler = std::function<void(sf::IpAddress&, const PortNumber&, const PacketID&, sf::Packet&, Server*)>;
 using TimeoutHandler = std::function<void(const ClientID&)>;
 
-using DbResult = std::vector<std::tuple<unsigned int, unsigned int, std::string>>;
+using DbResult = std::vector<std::tuple<std::string, std::string, std::string>>;
 
 class Server {
 public:
@@ -89,10 +89,11 @@ public:
     bool removeClient(const sf::IpAddress& l_ip, const PortNumber& l_port);
 
     bool initDatabase(const std::string& l_dbPath);
-    bool registerUser(const std::string& l_username, const std::string& l_password);
-    bool authenticateUser(const std::string& l_username, const std::string& l_password);
-    bool addMessage(unsigned int l_sender, unsigned int l_received, const std::string& l_content);
+    bool registerUser(const std::string& l_email, const std::string& l_username, const std::string& l_password);
+    bool authenticateUser(const std::string& l_email, const std::string& l_password, std::string& l_username);
+    bool addMessage(const std::string& l_sender, const std::string& l_receiver, const std::string& l_content);
     DbResult* getMessagesForUser(const std::string& l_username);
+    DbResult* getChatMessages(const std::string& l_firstUser, const std::string& l_secondUser);
 
     std::string hashPassword(const std::string& l_password);
 

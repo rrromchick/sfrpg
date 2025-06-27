@@ -45,8 +45,13 @@ public:
 
     bool isConnected() const;
     std::mutex& getMutex();
+
+    const std::string& getUserName() const;
+    void setUserName(const std::string& l_name);
 private:
     NetworkProtocol m_protocol;
+
+    std::string m_username;
 
     std::unique_ptr<sf::UdpSocket> m_udpSocket;
     std::shared_ptr<sf::TcpSocket> m_tcpSocket;
