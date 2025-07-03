@@ -86,8 +86,12 @@ bool Client::disconnect() {
 
     m_connected = false;
     
-    if (m_clientThread.joinable()) {
-        m_clientThread.join();
+    try {
+        if (m_clientThread.joinable()) {
+            m_clientThread.join();
+        }
+    } catch (const std::system_error& e) {
+        return true;
     }
 
     return true;
