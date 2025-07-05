@@ -1,24 +1,22 @@
 #include "Entity_Manager.h"
 #include "System_Manager.h"
 
-EntityManager::EntityManager(SystemManager* l_systemMgr) : m_systemManager(l_systemMgr) {}
-
+EntityManager::EntityManager(SystemManager* l_systemMgr) : m_systemManager(l_systemMgr), m_idCounter(0) {}
 EntityManager::~EntityManager() { purge(); }
 
-int EntityManager::addEntity(const Bitmask& l_bitmask, int l_id) {
+int EntityManager::addEntity(const Bitmask& l_bits, int l_id) {
     unsigned int id = (l_id == -1 ? m_idCounter : l_id);
     if (!m_entities.emplace(id, EntityData()).second) return -1;
     if (l_id == -1) ++m_idCounter;
 
     for (unsigned int i = 0; i < N_COMPONENT_TYPES; ++i) {
-        if (l_bitmask.getBit(i)) {
+        if (l_bits.getBit(i)) {
             addComponent(id, (Component)i);
         }
     }
 
-    m_systemManager->entityModified(id, l_bitmask);
+    m_systemManager->entityModified(id, l_bits);
     m_systemManager->addEvent(id, (EventID)EntityEvent::Spawned);
-    
     return id;
 }
 
@@ -29,7 +27,7 @@ int EntityManager::addEntity(const std::string& l_entityFile, int l_id) {
     file.open(Utils::getWorkingDirectory() + "media/Entities/" + l_entityFile + ".entity");
 
     if (!file.is_open()) {
-        std::cerr << "! Failed to open entity file: " << l_entityFile << std::endl;
+        std::cerr << "! Failed to load entity from file: " << l_entityFile << std::endl;
         return -1;
     }
 
@@ -58,11 +56,11 @@ int EntityManager::addEntity(const std::string& l_entityFile, int l_id) {
 
             unsigned int cid = 0;
             keystream >> cid;
-            
-            C_Base* component = getComponent<C_Base>(entityId, (Component)cid);
-            if (!component) continue;
 
-            keystream >> *component;
+            C_Base* comp = getComponent<C_Base>(entityId, (Component)cid);
+            if (!comp) continue;
+
+            keystream >> *comp;
         }
     }
 
@@ -86,17 +84,16 @@ bool EntityManager::removeEntity(const EntityId& l_entity) {
     }
 
     itr->second.m_bitmask.clear();
-    m_entities.erase(itr);
-    --m_idCounter;
 
     m_systemManager->removeEntity(l_entity);
     return true;
 }
 
 bool EntityManager::hasEntity(const EntityId& l_entity) {
-    auto itr = m_entities.find(l_entity);
-    return (itr != m_entities.end());
+    return (m_entities.find(l_entity) != m_entities.end());
 }
+
+void EntityManager::setSystemManager(SystemManager* l_systemMgr) { m_systemManager = l_systemMgr; }
 
 bool EntityManager::addComponent(const EntityId& l_entity, const Component& l_component) {
     auto itr = m_entities.find(l_entity);
@@ -105,9 +102,9 @@ bool EntityManager::addComponent(const EntityId& l_entity, const Component& l_co
 
     auto itr2 = m_compFactory.find(l_component);
     if (itr2 == m_compFactory.end()) return false;
-    
-    C_Base* comp = itr2->second();
-    itr->second.m_components.emplace_back(comp);
+    C_Base* component = itr2->second();
+
+    itr->second.m_components.emplace_back(component);
     itr->second.m_bitmask.turnOnBit((unsigned int)l_component);
 
     m_systemManager->entityModified(l_entity, itr->second.m_bitmask);
@@ -118,12 +115,7 @@ bool EntityManager::hasComponent(const EntityId& l_entity, const Component& l_co
     auto itr = m_entities.find(l_entity);
     if (itr == m_entities.end()) return false;
 
-    auto& container = itr->second.m_components;
-    auto itr2 = std::find_if(container.begin(), container.end(), [&l_component](C_Base* b) {
-        return b->getType() == l_component;
-    });
-
-    return (itr2 != container.end());
+    return (itr->second.m_bitmask.getBit((unsigned int)l_component));
 }
 
 bool EntityManager::removeComponent(const EntityId& l_entity, const Component& l_component) {
@@ -132,26 +124,29 @@ bool EntityManager::removeComponent(const EntityId& l_entity, const Component& l
     if (!itr->second.m_bitmask.getBit((unsigned int)l_component)) return false;
 
     auto& container = itr->second.m_components;
-    auto comp = std::find_if(container.begin(), container.end(), [&l_component](C_Base* b) {
+    auto component = std::find_if(container.begin(), container.end(), [&l_component](C_Base* b) {
         return b->getType() == l_component;
     });
+    if (component == container.end()) return false;
 
-    if (comp == container.end()) return false;
-    delete *comp;
+    delete *component;
+    container.erase(component);
+
     itr->second.m_bitmask.clearBit((unsigned int)l_component);
-    container.erase(comp);
-
     m_systemManager->entityModified(l_entity, itr->second.m_bitmask);
     return true;
 }
 
 void EntityManager::purge() {
-    for (auto& itr : m_entities) {
-        for (auto& comp : itr.second.m_components) { delete comp; }
-        itr.second.m_components.clear();
-        itr.second.m_bitmask.clear();
+    if (m_systemManager) m_systemManager->purgeEntities();
+
+    for (auto &entity : m_entities) {
+        for (auto &comp : entity.second.m_components) { delete comp; }
+
+        entity.second.m_components.clear();
+        entity.second.m_bitmask.clear();
     }
-    
+
     m_idCounter = 0;
     m_entities.clear();
 }
